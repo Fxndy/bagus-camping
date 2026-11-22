@@ -1,0 +1,29 @@
+{
+  "name": "rimba-rental",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Bagus Adventure — penyewaan alat camping dengan Netlify Blobs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "admin:init": "node --env-file-if-exists=.env server/init-admin.js",
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build-netlify.cjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@codegenie/serverless-express": "^5.0.0",
+    "@netlify/blobs": "^11.1.9",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "multer": "^2.5.0",
+    "sharp": ">=0.35.5"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
+  }
+}

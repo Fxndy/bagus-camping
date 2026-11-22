@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173629">
+  <title>Admin Bagus Adventure</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/admin-refinement.css">
+  <script defer src="/js/admin.js"></script>
+</head>
+<body class="admin-page">
+  <main class="admin-page-wrap">
+    <header class="admin-page-head"><a class="brand" href="/"><span class="brand-mark">B</span><span><strong>Bagus Adventure</strong><small>DASHBOARD ADMIN</small></span></a><a class="button button-quiet" href="/">Kembali ke situs</a></header>
+    <section id="adminLoginPanel" class="auth-dialog admin-login" aria-labelledby="adminLoginTitle">
+      <p class="eyebrow">AREA ADMINISTRATOR</p>
+      <h1 id="adminLoginTitle">Masuk Admin</h1>
+      <form id="adminLoginForm">
+        <label>Username<input name="username" autocomplete="username" required></label>
+        <label>Kata sandi<input name="password" type="password" autocomplete="current-password" required></label>
+        <p class="form-message" id="adminLoginMessage" role="status" aria-live="polite"></p>
+        <button class="button button-dark button-full" type="submit">Masuk ke dashboard</button>
+      </form>
+      <p class="security-note">Akses khusus administrator. Pendaftaran akun admin tidak tersedia di halaman ini.</p>
+    </section>
+    <section id="adminDashboard" class="admin-dashboard" hidden></section>
+  </main>
+</body>
+</html>

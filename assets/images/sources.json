@@ -1,0 +1,89 @@
+{
+  "downloadedAt": "2026-11-21T13:57:52.577Z",
+  "sources": [
+    {
+      "url": "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/tenda-dome.webp",
+        "/assets/images/product-default.webp"
+      ],
+      "width": 800,
+      "height": 534,
+      "bytes": 66652,
+      "sha256": "75b2f821c4d8ceb0e62513ee02dd2deaff90255391d7489e6abb5aefea7d7412",
+      "sourceSha256": "1a21c9459e68065e8f69c11aabc6345a8efdae92189efd8f63cdb9958f1ec9ee"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/tenda-4-orang.webp",
+        "/assets/images/matras-camping.webp",
+        "/assets/images/kompor-portable.webp",
+        "/assets/images/nesting-cooking-set.webp",
+        "/assets/images/kursi-lipat.webp",
+        "/assets/images/meja-lipat.webp"
+      ],
+      "width": 800,
+      "height": 533,
+      "bytes": 77048,
+      "sha256": "f19e2dd4945dac544901e14961b741309c550d19ba3483bca16136eee91a6da3",
+      "sourceSha256": "c9c9b5c156d3deed90ebeaca1fb3f2f826af3b3d439c78e5a9ef9382517f796e"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1504851149312-7a075b496cc7?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/tenda-6-orang.webp"
+      ],
+      "width": 800,
+      "height": 1148,
+      "bytes": 148210,
+      "sha256": "a1d01ff63cf5cc17e6ba5aa3eb24f07779897d72c43cda1fd042d110688b65bb",
+      "sourceSha256": "ef617e95cbfbdb2de9564c738c0783b91401938402e64d835f6436093f76a0cc"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/sleeping-bag.webp"
+      ],
+      "width": 800,
+      "height": 1320,
+      "bytes": 193594,
+      "sha256": "5bb58a7fee5c4f2cec5a5c578a9ceb760f2648dca76ef31c52b17df8aa5b3546",
+      "sourceSha256": "a1545c40fbc10de01ed297bca8fce8da16503a5f708f3f430a7eb155d1eae5ab"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/carrier-60l.webp",
+        "/assets/images/trekking-pole.webp"
+      ],
+      "width": 800,
+      "height": 534,
+      "bytes": 120214,
+      "sha256": "f88ba6d9d8b2fe51c20bfead08325859417ef4fe944e5156c29ccd5675fa0e55",
+      "sourceSha256": "66deb36bd2527142fb361c3d07a8cd3183a02b91a5f0756c4d8a2dc1dbb5ec15"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=78",
+      "files": [
+        "/assets/images/lampu-camping.webp"
+      ],
+      "width": 800,
+      "height": 1200,
+      "bytes": 129590,
+      "sha256": "e63f0bb8c417c2acc64b9d43f1e36d6b07b6a66be3132da42ddc2619c29ae4a0",
+      "sourceSha256": "95c11ef31e94a3c7ad31dab34b5ee750a10d3d0b6e632605a974871a567ce24e"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=2000&q=82",
+      "files": [
+        "/assets/images/hero-camping.webp"
+      ],
+      "width": 2000,
+      "height": 1333,
+      "bytes": 478704,
+      "sha256": "9f151d6869b6a3fcbb73aaf4659db206e086a9b41b38043b91ad77aee4f084b0",
+      "sourceSha256": "0889f004db926d2aaa9c3c8daeb080424a69af8269fde50191154acb4643eb9a"
+    }
+  ]
+}
