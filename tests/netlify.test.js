@@ -26,7 +26,7 @@ function memoryStore() {
 }
 
 test('Netlify handler persists sessions, inventory and private receipts across invocations without overselling', async () => {
-  const { handle } = await import('../netlify/functions/api.mjs');
+  const { handle } = await import('../netlify/functions/api.js');
   const stores = { database: memoryStore(), sessions: memoryStore(), media: memoryStore() };
   const image = await sharp({ create: { width: 5, height: 5, channels: 3, background: 'white' } }).png().toBuffer();
   async function request(path, { method = 'GET', body, cookie, key } = {}) {
