@@ -4,11 +4,13 @@
   const money = new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0});
   let selectedCategory='Semua';
   let availability = new Map();
+  window.availableStock = id => availability.get(id)?.available;
   let pendingAdd = null;
   let inventoryRefresh;
   const loadAvailability = async () => {
     try { const [data, catalog] = await Promise.all([window.BagusUI.request('/api/inventory'), window.BagusUI.request('/api/products')]); availability = new Map(data.inventory.map(item => [item.id, item])); window.PRODUCTS = catalog.products.map(product => ({...product, pricePerDay: product.pricePerDay ?? product.price, image: product.image || window.productImageFallback()})); window.categoryNames = [...new Set(window.PRODUCTS.map(product => product.category))]; renderCategories(); renderFilters(); renderProducts(); }
     catch { availability = new Map(); renderProducts(); }
+    window.Cart?.updateStock();
   };
   const addToCart = id => { const button = document.querySelector(`[data-add="${id}"]`); if (button && !button.disabled) button.click(); };
   const requestLoginForCart = id => { pendingAdd = id; window.showToast('Masuk atau daftar terlebih dahulu untuk menambah alat ke keranjang.'); window.Auth.open('login'); };
@@ -20,7 +22,7 @@
   document.addEventListener('bagus:auth-change', event => {
     if (event.detail.user && pendingAdd) { const id = pendingAdd; pendingAdd = null; setTimeout(() => addToCart(id), 0); }
   });
-  document.addEventListener('bagus:inventory-updated', loadAvailability);
+  window.addEventListener('bagus:inventory-updated', loadAvailability);
   window.addEventListener('focus', loadAvailability);
   inventoryRefresh = setInterval(() => { if (!document.hidden) loadAvailability(); }, 30000);
   window.addEventListener('beforeunload', () => clearInterval(inventoryRefresh));

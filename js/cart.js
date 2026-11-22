@@ -4,6 +4,7 @@
   const $ = selector => document.querySelector(selector);
   const { esc, money, modal, request } = window.BagusUI;
   const productFor = id => window.PRODUCTS.find(product => product.id === id);
+  const stockLimit = id => Math.min(99, window.availableStock(id) ?? 0);
   const validItems = items => Array.isArray(items) && items.length > 0 && items.every(item => productFor(item.id) && Number.isInteger(item.quantity) && item.quantity > 0 && item.quantity <= 99);
   let cart = [];
   let pending = null;
@@ -39,7 +40,11 @@
     $('#paymentProof').disabled = busy;
     $('#retryCheckoutRequest').disabled = busy || (Boolean(pending) && !pendingProof);
     $('#cartItems').querySelectorAll('button').forEach(node => { node.disabled = locked; });
-    $('#checkoutSubmit').disabled = locked || !config;
+    $('#cartItems').querySelectorAll('[data-qty="1"]').forEach(node => {
+      const id = Number(node.dataset.id);
+      node.disabled = locked || cart.find(item => item.id === id).quantity >= stockLimit(id);
+    });
+    $('#checkoutSubmit').disabled = locked || !config || !cart.length || cart.some(item => item.quantity > stockLimit(item.id));
     $('#checkoutSubmit').textContent = busy ? 'Menyimpan pesanan…' : 'Simpan pesanan & buka WhatsApp';
     $('#checkoutRetry').hidden = !pending;
     $('#retryCheckoutRequest').disabled = busy || (Boolean(pending) && !pendingProof);
@@ -58,6 +63,22 @@
     $('#cartTotal').textContent = money(cart.reduce((sum, item) => sum + productFor(item.id).pricePerDay * item.quantity * safeDays(), 0));
     $('#durationLine').textContent = `Durasi 1–${config?.maxRentalDays || 30} hari. Masa sewa dimulai saat admin mengonfirmasi pengambilan barang, bukan saat checkout.`;
     lockControls();
+  };
+  const updateStock = () => {
+    if (busy || pending || !cart.length) return;
+    let adjusted = false;
+    cart = cart.filter(item => {
+      const available = window.availableStock(item.id);
+      const quantity = !productFor(item.id) ? 0 : Math.min(item.quantity, available ?? item.quantity);
+      if (quantity !== item.quantity) adjusted = true;
+      item.quantity = quantity;
+      return quantity > 0;
+    });
+    if (adjusted) {
+      persistCart();
+      render();
+      window.showToast('Isi keranjang disesuaikan dengan stok terbaru.');
+    } else lockControls();
   };
   const renderInstructions = () => {
     const value = $('#checkoutForm [name="paymentMethod"]:checked')?.value;
@@ -132,6 +153,7 @@
       close();
       window.OrderUI.showInvoice(data.order, { accessToken: data.accessToken, serverNow: data.serverNow, saved: true, popupOpened });
       window.OrderUI.refreshVisible();
+      window.dispatchEvent(new Event('bagus:inventory-updated'));
       message.textContent = '';
       window.showToast('Pesanan tersimpan. Simpan tautan pribadi invoice Anda.');
     } catch (error) {
@@ -142,12 +164,14 @@
         try { sessionStorage.removeItem(REQUEST_KEY); } catch { /* Keep the error visible even when storage is unavailable. */ }
       }
       message.textContent = `${error.message}${pending ? ' Rincian dikunci sementara. Gunakan tombol coba lagi di bawah; kunci permintaan tetap sama.' : ''}`;
+      if (error.status === 409) window.dispatchEvent(new Event('bagus:inventory-updated'));
     } finally { busy = false; render(); }
   };
   $('#checkoutForm').addEventListener('submit', event => {
     event.preventDefault();
     if (busy || pending || !config) return;
     if (!window.Auth?.user) { $('#checkoutMessage').textContent = 'Masuk atau daftar terlebih dahulu sebelum membuat pesanan.'; window.Auth?.open('login'); return; }
+    if (cart.some(item => item.quantity > stockLimit(item.id))) { $('#checkoutMessage').textContent = 'Stok belum tersedia atau tidak cukup. Periksa kembali keranjang.'; return; }
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
     const values = new FormData(form);
@@ -184,10 +208,15 @@
       const product = productFor(id);
       if (!product) return;
       const item = cart.find(entry => entry.id === id);
-      if (add) {
-        if (item) item.quantity = Math.min(99, item.quantity + 1); else cart.push({ id, quantity: 1 });
-        window.showToast(`${product.name} ditambahkan ke keranjang.`);
-      } else if (quantity && item) item.quantity = Math.min(99, Math.max(0, item.quantity + Number(quantity.dataset.qty)));
+      if (add || quantity?.dataset.qty === '1') {
+        const limit = stockLimit(id);
+        if ((item?.quantity ?? 0) >= limit) {
+          window.showToast(limit ? `Maksimal ${limit} unit ${product.name} di keranjang.` : `Stok ${product.name} tidak tersedia.`);
+          return;
+        }
+        if (item) item.quantity++; else cart.push({ id, quantity: 1 });
+        if (add) window.showToast(`${product.name} ditambahkan ke keranjang.`);
+      } else if (quantity?.dataset.qty === '-1' && item) item.quantity--;
       else if (remove) cart = cart.filter(entry => entry.id !== id);
       cart = cart.filter(entry => entry.quantity > 0);
       persistCart(); render();
@@ -218,7 +247,7 @@
     ['fullName', 'phone', 'rentalDays', 'note'].forEach(name => { $('#checkoutForm').elements.namedItem(name).value = payload[name] || ''; });
     $('#checkoutMessage').textContent = 'Pengiriman sebelumnya belum dikonfirmasi. Coba lagi dengan rincian yang sama untuk mengambil hasilnya.';
   }
-  window.Cart = { render, open, close, isSubmitting: () => busy };
+  window.Cart = { render, open, close, updateStock, isSubmitting: () => busy };
   render();
   loadConfig();
 })();
