@@ -1,68 +1,64 @@
-# Bagus Adventure — penyewaan alat camping
+# Bagus Adventure
 
-HTML, CSS, JavaScript vanilla, dan Express. Harga dihitung ulang di server lalu dibekukan pada invoice.
+Aplikasi penyewaan alat camping. Pelanggan memilih perlengkapan, menentukan durasi sewa, lalu mengunggah bukti transfer. Admin mengelola stok, memeriksa pembayaran, dan mencatat pengambilan serta pengembalian.
+
+![Perlengkapan camping Bagus Adventure](assets/images/hero-camping.webp)
+
+[Deploy ke Netlify](#deploy-ke-netlify) · [Jalankan lokal](#jalankan-lokal) · [Alur sewa](#alur-sewa) · [Pengujian](#pengujian)
 
 ## Deploy ke Netlify
 
-1. Import repositori proyek di Netlify. `netlify.toml` mengatur Node 24, build `npm run build`, publish `dist`, dan Netlify Functions. Jangan unggah `dist` saja lewat drag-and-drop karena API perlu Functions.
-2. Di **Project configuration → Environment variables**, isi `SESSION_SECRET` (acak, minimal 32 karakter), `ADMIN_USERNAME` (3–24 karakter), dan `ADMIN_PASSWORD` (minimal 8 karakter, maksimal 72 byte) untuk Functions. `ADMIN_FULL_NAME` opsional. Jangan pakai kredensial contoh atau memasukkan `.env` ke repositori.
-3. Deploy, cek `/api/health`, lalu login di `/admin`. Admin awal dibuat saat login/registrasi pertama jika belum ada admin. Mengubah variabel admin tidak mengganti sandi akun yang sudah dibuat.
+1. Impor repositori ini dari GitHub. [`netlify.toml`](netlify.toml) menetapkan Node.js 24, perintah `npm run build`, direktori publik `dist`, dan direktori Functions. Jangan unggah `dist` saja lewat drag-and-drop: API memerlukan Netlify Functions.
+2. Buka **Project configuration → Environment variables**. Tambahkan variabel berikut dengan scope **Functions**.
 
-Netlify Blobs dibuat otomatis lewat `getStore` tanpa token manual: `bagus-database` (akun, katalog, stok, dan pesanan), `bagus-sessions` (sesi), dan `bagus-media` (foto dan bukti transfer). Bukti tetap privat. Database memakai pembacaan konsisten kuat dan ETag; jika dua perubahan bertabrakan, salah satunya mendapat `409` dan perlu dimuat ulang sebelum dicoba kembali.
+   | Variabel | Nilai | Tandai secret |
+   | --- | --- | --- |
+   | `SESSION_SECRET` | Nilai acak minimal 32 karakter | Ya |
+   | `ADMIN_USERNAME` | 3–24 karakter: huruf, angka, titik, garis bawah, atau tanda hubung | Tidak |
+   | `ADMIN_PASSWORD` | Minimal 8 karakter, maksimal 72 byte | Ya |
+   | `ADMIN_FULL_NAME` | Nama tampilan, opsional | Tidak |
+   | `MAX_RENTAL_DAYS` | Batas durasi sewa, opsional. Default 30, rentang 1–3650 | Tidak |
 
-Data lokal `data/database.json` dan unggahan lama tidak diimpor otomatis. Deploy pertama dimulai dengan katalog bawaan dan stok nol; atur stok lewat `/admin`. Deploy Preview dalam proyek yang sama dapat mengakses store yang sama; gunakan proyek Netlify terpisah untuk menguji perubahan tanpa menyentuh data produksi.
+3. Deploy dan buka `/api/health`. Jika responsnya `200` dengan `{"status":"ok"}`, buka `/admin`. Saat belum ada akun admin, aplikasi membuatnya pada permintaan login atau registrasi pertama. Mengubah variabel tidak mengganti sandi admin yang sudah tersimpan.
+4. Isi stok di dashboard. Deploy pertama membawa katalog bawaan dengan stok nol. Database dan unggahan dari komputer lokal tidak ikut diimpor.
 
-Uji lokal: `npm ci`, isi `.env` dari `.env.example`, jalankan `npm run build` lalu `npx netlify-cli dev`. Untuk build tanpa deploy: `npx netlify-cli build --offline`.
+[`netlify/functions/api.js`](netlify/functions/api.js) menjalankan API Express dan membuka Netlify Blobs dengan `getStore`, tanpa token manual. `bagus-database` menyimpan akun, katalog, stok, dan pesanan; `bagus-sessions` menyimpan sesi; `bagus-media` menyimpan foto produk dan bukti transfer. Bukti transfer hanya disajikan lewat API yang memeriksa hak akses.
 
-## Menjalankan
+Jika perubahan data bertabrakan, API mengembalikan `409` alih-alih menimpa perubahan lain. Muat ulang sebelum mencoba lagi. Gunakan proyek Netlify terpisah untuk pengujian dengan data terisolasi: Deploy Preview dalam proyek yang sama dapat memakai penyimpanan yang sama.
 
-Untuk Express mandiri, gunakan Node.js 24. Jalankan `npm ci` lalu `npm start`. Server memuat `.env` bila tersedia. `SESSION_SECRET` wajib acak dan minimal 32 karakter. Jangan commit atau membagikan `.env`. Port default 3000.
+## Jalankan lokal
 
-Docker: siapkan `.env` privat berisi secret, lalu jalankan `docker compose up -d --build`. Buka http://localhost:3000; pemeriksaan server: `/api/health`. Pakai `COOKIE_SECURE=true` dan `TRUST_PROXY=true` hanya di belakang reverse proxy HTTPS tepercaya. Jangan biarkan port aplikasi dapat diakses langsung dari internet saat trust proxy diaktifkan.
+Gunakan Node.js 24. Salin [`.env.example`](.env.example) menjadi `.env`, lalu isi `SESSION_SECRET`, `ADMIN_USERNAME`, dan `ADMIN_PASSWORD` sebelum menjalankan server. Gunakan `COOKIE_SECURE=false` dan `TRUST_PROXY=false` untuk akses HTTP langsung. Jangan commit `.env`.
 
-## Administrator
+```bash
+npm ci
+npm start
+```
 
-Server tidak membuat admin dengan sandi bawaan saat start. Untuk membuat atau memperbarui admin, isi `ADMIN_USERNAME`, `ADMIN_FULL_NAME` (opsional), dan `ADMIN_PASSWORD` (8–72 byte) dalam lingkungan operator privat, lalu jalankan `npm run admin:init`. Pendaftaran situs selalu membuat akun pelanggan. Jangan menaruh sandi di kode atau browser.
+Buka [katalog lokal](http://localhost:3000) atau [dashboard admin](http://localhost:3000/admin). Server mandiri bisa membuat admin dengan kredensial bawaan jika variabel tidak diisi; jangan buka instance tersebut ke internet. Untuk membuat atau memperbarui akun admin lokal, isi variabel admin lalu jalankan `npm run admin:init`. Perintah itu mengubah data lokal, bukan data Netlify.
 
-## Pembayaran dan durasi
+### Docker
 
-- Metode pembayaran: SeaBank 901144289647 dan GoPay 085777598395. Checkout wajib mengunggah bukti transfer sebelum pesanan dapat dibuat.
-- Bukti gambar dibatasi 4 MB dan diproses ulang ke WebP. Bukti hanya dapat dilihat pemilik pesanan atau admin. Status awal `pending_verification`; admin tetap perlu memeriksa bukti dan dana. Tidak ada verifikasi otomatis.
-- Pengaturan nomor tujuan usaha: `server/payment-config.json`.
-- `DATA_DIR/uploads/products` menyimpan foto produk publik yang diunggah admin; foto kosong memakai satu gambar fallback lokal.
+Setelah mengisi `.env`, jalankan `docker compose up -d --build`. Konfigurasi Compose tidak meneruskan variabel kredensial admin ke container. Sebelum membuka akses publik, jalankan `node server/init-admin.js` di dalam container dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` yang diberikan melalui lingkungan operator privat. Gunakan `TRUST_PROXY=false` untuk akses langsung, atau sesuaikan dengan jumlah proxy tepercaya saat memakai reverse proxy.
 
-### Browser end-to-end test
-
-Setelah `npm ci`, jalankan `npx playwright install chromium` sekali untuk memasang browser pengujian. Tes browser dapat dijalankan dengan `node --test tests/browser-flow.cjs`.
-
-- Batas sewa `MAX_RENTAL_DAYS` default 30, dapat diubah ke bilangan bulat 1–3650. Server dan UI menggunakan batas yang sama.
-- WhatsApp Admin Bagus Adventure: `628980033500` (08980033500).
+Express mandiri dan Docker menyimpan data di `data/database.json` (atau `$DATA_DIR/database.json`) serta unggahan di direktori `uploads` di sebelahnya. Gunakan satu proses penulis untuk satu direktori data. Untuk mencadangkan, salin database **dan** unggahan ke tempat privat. Di Docker, keduanya ada di volume `camping_data` pada `/app/data`; `docker compose down -v` menghapus volume itu.
 
 ## Alur sewa
 
-`pending_approval → approved → waiting_pickup → active → completed`. Admin dapat menolak pesanan yang menunggu persetujuan atau membatalkan sebelum pengambilan. Pembayaran memiliki status terpisah: `unpaid`, `pending_verification`, `paid`, `rejected`. Membuka WhatsApp tidak mengubah pembayaran. Laporan pelanggan menandai menunggu verifikasi; hanya admin yang memverifikasi pembayaran.
+1. Pelanggan masuk dan memilih perlengkapan. Keranjang dibatasi stok yang tersedia setelah dikurangi pesanan yang masih menahan stok. Saat checkout, server memeriksa stok lagi, menghitung total, dan menyimpan harga pada invoice.
+2. Pelanggan memilih SeaBank atau GoPay dan mengunggah bukti transfer (JPG, PNG, atau WebP, maksimal 4 MB). Aplikasi menyimpan pesanan sebelum membuka WhatsApp. Jika popup diblokir, tautan tersedia di invoice. Mengulang permintaan checkout yang sama tidak membuat invoice baru.
+3. Admin memeriksa pembayaran secara manual. Status pembayaran terpisah dari status sewa; membuka WhatsApp tidak menandai pesanan lunas.
+4. Setelah menyetujui pesanan, admin menyiapkan barang dan mengonfirmasi pengambilan. Saat itulah hitung mundur sewa dimulai. Tenggat tampil dalam WIB. Waktu habis tidak otomatis menyelesaikan pesanan atau menghitung denda. Admin menutup sewa setelah barang kembali.
 
-Checkout menyimpan pesanan sebelum WhatsApp dibuka. Idempotency key membuat pengulangan permintaan dengan payload identik mengembalikan invoice yang sama. Jika popup diblokir, invoice menyediakan tautan untuk mengirim ulang tanpa membuat pesanan baru.
+Nomor pembayaran disimpan di [`server/payment-config.json`](server/payment-config.json). Lihat [`server/settings.js`](server/settings.js) untuk pengaturan checkout dan [`js/config.js`](js/config.js) untuk tampilan kontak usaha.
 
-Timer resmi hanya dimulai ketika admin mengonfirmasi pengambilan fisik. Server menyimpan `picked_up_at` dan `rental_end_at` dalam UTC; UI menampilkan WIB. Timer mengambil sisa waktu dari tenggat yang tersimpan, tetap berjalan setelah refresh/restart, dan waktu habis tidak otomatis menyelesaikan sewa atau menghitung denda. Admin mengonfirmasi pengembalian untuk menyelesaikan order.
+## Pengujian
 
-Akses tamu memakai token privat pada fragmen tautan invoice. Simpan dan jangan bagikan tautan tersebut. Akun pelanggan hanya melihat pesanan miliknya melalui sesi login.
+| Perintah | Kegunaan |
+| --- | --- |
+| `npm test` | Tes API, penyimpanan, dan alur pesanan |
+| `npx playwright install chromium` | Pasang browser pengujian sekali |
+| `node --test tests/browser-flow.cjs` | Uji katalog, batas stok, checkout, dan dashboard dari browser |
+| `npx netlify-cli build --offline` | Uji build dan pengemasan Functions tanpa deploy |
 
-## Penyimpanan JSON (khusus Express mandiri/Docker)
-
-Seluruh data akun, hash sandi, pesanan, item pesanan, riwayat status, riwayat pembayaran, nomor invoice, kunci keamanan token tamu, dan sesi disimpan di `data/database.json` atau `$DATA_DIR/database.json`. Docker menyimpan berkas ini dalam named volume `camping_data` pada `/app/data/database.json`. Penulisan diserialisasi, ditulis ke berkas sementara, lalu di-rename untuk mencegah berkas JSON setengah tertulis.
-
-JSON file cocok untuk satu proses aplikasi pada satu instance. Jangan menjalankan banyak replika yang menulis file yang sama; JSON tidak menyediakan locking lintas-proses. Backup salin `/app/data/database.json` dari volume, simpan dengan aman karena berisi data pribadi/hash kredensial, dan jangan gunakan `docker compose down -v` jika volume harus dipertahankan. `docker compose down` lalu `docker compose up -d --build` mempertahankan volume yang sama.
-
-Jika tersedia `database.json` yang lebih lama di direktori data, struktur users/orders/orderItems yang ada tetap dibaca dan field baru diberi default saat pemuatan. Data asli tidak dihapus saat migrasi versi schema.
-
-## Pengujian dan berkas situs
-
-Jalankan `npm test`. Pengujian menggunakan direktori sementara terpisah dan membersihkannya setelah selesai. Docker harus diuji di host dengan Docker CLI/daemon terpasang.
-
-- Kontak usaha, nomor WhatsApp, hero: `js/config.js`.
-- Produk dan harga tampilan: `js/products.js`; harga otoritatif backend: `server/orders.js`. Harga pada invoice terdahulu tidak berubah.
-- Markup dan tampilan: `index.html`, `css/style.css`.
-- Foto: `assets/images/`.
-
-Server hanya menyajikan HTML, CSS, JavaScript, dan aset. File data, source backend, package, dan `.env` tidak disajikan secara publik.
+Untuk mencoba jalur Netlify secara lokal, jalankan `npm run build`, lalu `npx netlify-cli dev`. Build lokal tidak membuktikan deploy produksi berhasil; cek `/api/health` di URL deploy setelah penerbitan.
